@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join Bit2byte - Membership Form</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!--  NAVBAR  -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <!-- Logo -->
+            <div class="logo">
+                <span class="logo-text">Bit2byte</span>
+            </div>
+            
+            <!-- Navigation Menu -->
+            <ul class="nav-menu">
+                <li><a href="index.html#home" class="nav-link">Home</a></li>
+                <li><a href="index.html#about" class="nav-link">About</a></li>
+                <li><a href="index.html#events" class="nav-link">Events</a></li>
+                <li><a href="index.html#team" class="nav-link">Members</a></li>
+                <li><a href="index.html#contact" class="nav-link">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!--  MEMBERSHIP FORM SECTION  -->
+    <section class="membership-section">
+        <div class="membership-container">
+            <h1 class="membership-title">Join Bit2byte</h1>
+            <p class="membership-subtitle">Become part of our coding community</p>
+            
+            <div class="membership-form-wrapper">
+                <form class="membership-form" id="membershipForm">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">First Name *</label>
+                            <input type="text" id="firstName" name="firstName" placeholder="John" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name *</label>
+                            <input type="text" id="lastName" name="lastName" placeholder="Doe" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address *</label>
+                        <input type="email" id="email" name="email" placeholder="you@example.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone Number *</label>
+                        <input type="tel" id="phone" name="phone" placeholder="+1 (555) 000-0000" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="year">Year of Study *</label>
+                            <select id="year" name="year" required>
+                                <option value="">-- Select Year --</option>
+                                <option value="1st">1st Year</option>
+                                <option value="2nd">2nd Year</option>
+                                <option value="3rd">3rd Year</option>
+                                <option value="4th">4th Year</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="department">Department/Major *</label>
+                            <input type="text" id="department" name="department" placeholder="e.g., Computer Science" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="interests">Areas of Interest *</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="web" name="interests" value="Web Development">
+                                <label for="web">Web Development</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="mobile" name="interests" value="Mobile Development">
+                                <label for="mobile">Mobile Development</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="ai" name="interests" value="AI/Machine Learning">
+                                <label for="ai">AI/Machine Learning</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="cybersecurity" name="interests" value="Cybersecurity">
+                                <label for="cybersecurity">Cybersecurity</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="cloud" name="interests" value="Cloud Computing">
+                                <label for="cloud">Cloud Computing</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="other-interest" name="interests" value="Other">
+                                <label for="other-interest">Other</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="message">Tell us about yourself (Optional)</label>
+                        <textarea id="message" name="message" rows="4" placeholder="What motivates you to join Bit2byte?"></textarea>
+                    </div>
+
+                    <div class="form-group checkbox-item">
+                        <input type="checkbox" id="terms" name="terms" required> 
+                        <label for="terms">I agree to the terms and conditions </label>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="submit-button">Submit Application</button>
+                        <a href="index.html" class="cancel-link">Back to Home</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!--  FOOTER  -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Bit2byte</h4>
+                    <p>Where Code Meets Creativity</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html#home">Home</a></li>
+                        <li><a href="index.html#about">About</a></li>
+                        <li><a href="index.html#events">Events</a></li>
+                        <li><a href="index.html#team">Team</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: info@bit2byte.com</p>
+                    <p>Location: Tech Campus, City</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Bit2byte Coding Club. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Handle form submission
+        document.getElementById('membershipForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form data
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const email = document.getElementById('email').value;
+            
+            // Show success message
+            alert(`Welcome, ${firstName} ${lastName}!\n\nYour application has been submitted successfully.\nWe'll contact you at ${email} soon.`);
+            
+            // Reset form
+            this.reset();
+        });
+    </script>
+</body>
+</html>
