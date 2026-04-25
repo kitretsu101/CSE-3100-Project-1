@@ -273,33 +273,13 @@ class CardTilt {
 
 class LocalStorageManager {
     constructor() {
-        this.themeKey = 'bit2byte-theme';
         this.formKey = 'bit2byte-form-data';
         this.init();
     }
 
     init() {
-        this.loadTheme();
         this.loadFormData();
         this.setupFormAutoSave();
-    }
-
-    // Theme Management
-    saveTheme(theme) {
-        localStorage.setItem(this.themeKey, theme);
-    }
-
-    loadTheme() {
-        const savedTheme = localStorage.getItem(this.themeKey);
-        if (savedTheme) {
-            document.body.classList.add(savedTheme);
-        }
-    }
-
-    toggleTheme() {
-        const isDark = document.body.classList.contains('dark-mode');
-        document.body.classList.toggle('dark-mode');
-        this.saveTheme(isDark ? '' : 'dark-mode');
     }
 
     // Form Data Management
@@ -544,30 +524,6 @@ class MembershipForm {
 }
 
 // =====================================================
-// THEME TOGGLE
-// =====================================================
-
-class ThemeToggle {
-    constructor() {
-        this.button = this.createButton();
-        this.storage = new LocalStorageManager();
-        this.init();
-    }
-
-    createButton() {
-        const button = document.createElement('button');
-        button.className = 'theme-toggle';
-        button.setAttribute('aria-label', 'Toggle theme');
-        document.body.appendChild(button);
-        return button;
-    }
-
-    init() {
-        this.button.addEventListener('click', () => this.storage.toggleTheme());
-    }
-}
-
-// =====================================================
 // INITIALIZATION
 // =====================================================
 
@@ -604,6 +560,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Membership form handling
     new MembershipForm();
 
-    // Theme toggle
-    new ThemeToggle();
+    // CTA button handler
+    const ctaButton = document.querySelector('.cta-button');
+    if (ctaButton) {
+        ctaButton.addEventListener('click', () => {
+            window.location.href = 'member-form.html';
+        });
+    }
 });
