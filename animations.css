@@ -1,0 +1,284 @@
+/* ============================================================
+   ANIMATIONS.CSS - Animation Styles for Bit2byte Website
+   ============================================================ */
+
+/* Typewriter Effect */
+.typewriter {
+    position: relative;
+    display: inline-block;
+}
+
+.typewriter::after {
+    content: '|';
+    animation: blink 1s infinite;
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+/* Sticky Navbar */
+.navbar.sticky {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+    transform: translateY(0);
+    transition: all 0.3s ease;
+}
+
+.navbar.sticky .nav-container {
+    padding: 0.5rem 2rem;
+}
+
+.navbar.sticky .logo-text {
+    font-size: 1.5rem;
+}
+
+/* Toast Notification */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #4CAF50;
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    transform: translateX(400px);
+    transition: transform 0.3s ease;
+    font-weight: 500;
+    max-width: 300px;
+}
+
+.toast.show {
+    transform: translateX(0);
+}
+
+.toast.error {
+    background: #f44336;
+}
+
+/* Skeleton Loading */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 8px;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.skeleton-card {
+    height: 300px;
+    margin-bottom: 1rem;
+}
+
+.skeleton-text {
+    height: 20px;
+    margin-bottom: 0.5rem;
+}
+
+.skeleton-text.short {
+    width: 60%;
+}
+
+.skeleton-text.long {
+    width: 80%;
+}
+
+/* Card Tilt Effect */
+.card-tilt {
+    transition: transform 0.1s ease;
+    transform-style: preserve-3d;
+}
+
+/* Intersection Observer Animations */
+.fade-in {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.fade-in.animate {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.slide-up {
+    opacity: 0;
+    transform: translateY(50px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.slide-up.animate {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.slide-left {
+    opacity: 0;
+    transform: translateX(-50px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.slide-left.animate {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.slide-right {
+    opacity: 0;
+    transform: translateX(50px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.slide-right.animate {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Stats Counter Animation */
+.stat-number.counting {
+    animation: countPulse 0.5s ease;
+}
+
+@keyframes countPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* Dark Mode */
+body.dark-mode {
+    --dark-bg: #1a1a1a;
+    --darker-bg: #2d2d2d;
+    --text-light: #ffffff;
+    --text-lighter: #cccccc;
+    background: var(--dark-bg);
+    color: var(--text-light);
+}
+
+body.dark-mode .navbar {
+    background: rgba(26, 26, 26, 0.95);
+    border-bottom: 1px solid rgba(32, 178, 170, 0.3);
+}
+
+body.dark-mode .hero {
+    background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+}
+
+body.dark-mode .about {
+    background: var(--dark-bg);
+}
+
+body.dark-mode .about-text {
+    background: var(--darker-bg);
+    border-color: rgba(32, 178, 170, 0.3);
+}
+
+body.dark-mode .about-text:hover {
+    background: var(--darker-bg);
+    border-color: rgba(32, 178, 170, 0.5);
+}
+
+body.dark-mode .events {
+    background: var(--darker-bg);
+}
+
+body.dark-mode .event-card {
+    background: var(--dark-bg);
+    border-color: rgba(32, 178, 170, 0.3);
+}
+
+body.dark-mode .team {
+    background: var(--dark-bg);
+}
+
+body.dark-mode .team-card {
+    background: var(--dark-bg);
+    border-color: rgba(32, 178, 170, 0.3);
+}
+
+body.dark-mode .contact {
+    background: var(--darker-bg);
+}
+
+body.dark-mode .contact-form-wrapper {
+    background: var(--dark-bg);
+    border-color: rgba(32, 178, 170, 0.3);
+}
+
+body.dark-mode .form-group input,
+body.dark-mode .form-group textarea {
+    background: var(--darker-bg);
+    border-color: rgba(32, 178, 170, 0.3);
+    color: var(--text-light);
+}
+
+body.dark-mode .form-group input::placeholder,
+body.dark-mode .form-group textarea::placeholder {
+    color: var(--text-lighter);
+}
+
+body.dark-mode .footer {
+    background: #0f0f0f;
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.theme-toggle::before {
+    content: '🌙';
+}
+
+body.dark-mode .theme-toggle::before {
+    content: '☀️';
+}
+
+/* Mobile Responsive Animations */
+@media (max-width: 768px) {
+    .toast {
+        left: 20px;
+        right: 20px;
+        bottom: 20px;
+        max-width: none;
+    }
+
+    .theme-toggle {
+        top: 15px;
+        right: 15px;
+        width: 45px;
+        height: 45px;
+        font-size: 1rem;
+    }
+}

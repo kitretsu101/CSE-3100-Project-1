@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="animations.css">
 </head>
 <body>
     <!--  NAVBAR  -->
@@ -139,6 +140,7 @@
                     <ul>
                         <li><a href="index.html#home">Home</a></li>
                         <li><a href="index.html#about">About</a></li>
+                        <li><a href="index.html#stats">Stats</a></li>
                         <li><a href="index.html#events">Events</a></li>
                         <li><a href="index.html#team">Team</a></li>
                     </ul>
@@ -155,22 +157,6 @@
         </div>
     </footer>
 
-    <script>
-        // Handle form submission
-        document.getElementById('membershipForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Get form data
-            const firstName = document.getElementById('firstName').value;
-            const lastName = document.getElementById('lastName').value;
-            const email = document.getElementById('email').value;
-            
-            // Show success message
-            alert(`Welcome, ${firstName} ${lastName}!\n\nYour application has been submitted successfully.\nWe'll contact you at ${email} soon.`);
-            
-            // Reset form
-            this.reset();
-        });
-    </script>
+    <script src="main.js"></script>
 </body>
 </html>
