@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1,
+    "title": "Annual Hackathon",
+    "date": "May 15, 2026",
+    "description": "Join our 24-hour hackathon where you'll collaborate with amazing developers to build innovative solutions and compete for exciting prizes.",
+    "image": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=300&fit=crop",
+    "rsvps": []
+  },
+  {
+    "id": 2,
+    "title": "Web Development Workshop",
+    "date": "May 22, 2026",
+    "description": "Learn modern web development techniques and best practices from industry experts. Perfect for beginners and intermediate developers.",
+    "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop",
+    "rsvps": []
+  },
+  {
+    "id": 3,
+    "title": "Coding Contest",
+    "date": "June 5, 2026",
+    "description": "Test your problem-solving skills in our competitive coding contest. Compete with peers and showcase your programming prowess.",
+    "image": "https://images.unsplash.com/photo-1517694712999-b8d9e7bae9eb?w=400&h=300&fit=crop",
+    "rsvps": []
+  },
+  {
+    "id": 4,
+    "title": "Tech Talk Seminar",
+    "date": "June 12, 2026",
+    "description": "Hear from industry leaders about the latest trends in AI, blockchain, and cloud computing. Gain insights into future career opportunities.",
+    "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop",
+    "rsvps": []
+  }
+]

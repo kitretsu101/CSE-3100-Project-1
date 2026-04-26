@@ -27,6 +27,10 @@
                 <li><a href="#events" class="nav-link">Events</a></li>
                 <li><a href="#team" class="nav-link">Members</a></li>
                 <li><a href="#contact" class="nav-link">Contact</a></li>
+                <li id="adminLink" style="display: none;"><a href="admin.php" class="nav-link">Admin</a></li>
+                <li id="loginLink"><a href="login.php" class="nav-link">Login</a></li>
+                <li id="registerLink"><a href="register.php" class="nav-link">Register</a></li>
+                <li id="logoutLink" style="display: none;"><a href="logout.php" class="nav-link">Logout</a></li>
             </ul>
         </div>
     </nav>
@@ -96,62 +100,8 @@
     <section id="events" class="events">
         <div class="events-container">
             <h2 class="section-title">Upcoming Events</h2>
-            <div class="events-grid">
-                <!-- Event Card 1: Hackathon -->
-                <div class="event-card">
-                    <div class="event-image">
-                        <img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=300&fit=crop" alt="Hackathon">
-                    </div>
-                    <div class="event-info">
-                        <h3>Annual Hackathon</h3>
-                        <p class="event-date">May 15, 2026</p>
-                        <p class="event-description">
-                            Join our 24-hour hackathon where you'll collaborate with amazing developers to build innovative solutions and compete for exciting prizes.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Event Card 2: Workshop -->
-                <div class="event-card">
-                    <div class="event-image">
-                        <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop" alt="Web Development Workshop">
-                    </div>
-                    <div class="event-info">
-                        <h3>Web Development Workshop</h3>
-                        <p class="event-date">May 22, 2026</p>
-                        <p class="event-description">
-                            Learn modern web development techniques and best practices from industry experts. Perfect for beginners and intermediate developers.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Event Card 3: Coding Contest -->
-                <div class="event-card">
-                    <div class="event-image">
-                        <img src="https://images.unsplash.com/photo-1517694712999-b8d9e7bae9eb?w=400&h=300&fit=crop" alt="Coding Contest">
-                    </div>
-                    <div class="event-info">
-                        <h3>Coding Contest</h3>
-                        <p class="event-date">June 5, 2026</p>
-                        <p class="event-description">
-                            Test your problem-solving skills in our competitive coding contest. Compete with peers and showcase your programming prowess.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Event Card 4: Tech Talk Seminar -->
-                <div class="event-card">
-                    <div class="event-image">
-                        <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop" alt="Tech Talk Seminar">
-                    </div>
-                    <div class="event-info">
-                        <h3>Tech Talk Seminar</h3>
-                        <p class="event-date">June 12, 2026</p>
-                        <p class="event-description">
-                            Hear from industry leaders about the latest trends in AI, blockchain, and cloud computing. Gain insights into future career opportunities.
-                        </p>
-                    </div>
-                </div>
+            <div class="events-grid" id="eventsGrid">
+                <!-- Events will be loaded dynamically -->
             </div>
         </div>
     </section>
@@ -237,7 +187,7 @@
             <div class="contact-content">
                 <!-- Contact Form -->
                 <div class="contact-form-wrapper">
-                    <form class="contact-form">
+                    <form class="contact-form" method="POST" action="contact-submit.php">
                         <div class="form-group">
                             <label for="name">Your Name</label>
                             <input type="text" id="name" name="name" placeholder="John Doe" required>
@@ -253,7 +203,7 @@
                             <textarea id="message" name="message" rows="5" placeholder="Your message here..." required></textarea>
                         </div>
 
-                        <button type="submit" class="submit-button">Send Message</button>
+                        <button id="submitBtn" type="submit" class="submit-button">Send Message</button>
                     </form>
                 </div>
 

@@ -116,6 +116,11 @@ class Toast {
     }
 }
 
+const toastManager = new Toast();
+function showToast(message, type = 'success') {
+    toastManager.show(message, type);
+}
+
 // =====================================================
 // STATS COUNTER
 // =====================================================
@@ -443,7 +448,7 @@ class ScrollAnimations {
 class ContactForm {
     constructor() {
         this.form = document.querySelector('.contact-form');
-        this.toast = new Toast();
+        this.submitButton = document.querySelector('#submitBtn');
         this.init();
     }
 
@@ -453,29 +458,47 @@ class ContactForm {
         this.form.addEventListener('submit', (e) => this.handleSubmit(e));
     }
 
-    handleSubmit(e) {
+    async handleSubmit(e) {
         e.preventDefault();
+        if (!this.submitButton) return;
 
-        // Simulate form submission
         const formData = new FormData(this.form);
-        const data = Object.fromEntries(formData);
+        const endpoint = this.form.action || 'contact-submit.php';
 
-        // Show success toast
-        this.toast.show('Thank you! Your message has been sent successfully.', 'success');
+        this.submitButton.disabled = true;
+        this.submitButton.textContent = 'Sending...';
 
-        // Reset form
-        this.form.reset();
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                body: formData,
+            });
 
-        // Clear saved contact form data
-        const savedData = localStorage.getItem('bit2byte-form-data');
-        if (savedData) {
-            try {
-                const parsedData = JSON.parse(savedData);
-                parsedData.contact = { name: '', email: '', message: '' };
-                localStorage.setItem('bit2byte-form-data', JSON.stringify(parsedData));
-            } catch (e) {
-                localStorage.removeItem('bit2byte-form-data');
+            const result = await response.json();
+            const status = result.status || 'error';
+            const message = result.message || 'Unable to submit the form. Please try again.';
+
+            showToast(message, status === 'success' ? 'success' : 'error');
+
+            if (status === 'success') {
+                this.form.reset();
+                const savedData = localStorage.getItem('bit2byte-form-data');
+                if (savedData) {
+                    try {
+                        const parsedData = JSON.parse(savedData);
+                        parsedData.contact = { name: '', email: '', message: '' };
+                        localStorage.setItem('bit2byte-form-data', JSON.stringify(parsedData));
+                    } catch (error) {
+                        localStorage.removeItem('bit2byte-form-data');
+                    }
+                }
             }
+        } catch (error) {
+            showToast('Server error. Please try again later.', 'error');
+            console.error('Contact form submit error:', error);
+        } finally {
+            this.submitButton.disabled = false;
+            this.submitButton.textContent = 'Send Message';
         }
     }
 }
@@ -524,6 +547,178 @@ class MembershipForm {
 }
 
 // =====================================================
+// DYNAMIC EVENTS MANAGEMENT
+// =====================================================
+
+class EventsManager {
+    constructor() {
+        this.eventsGrid = document.getElementById('eventsGrid');
+        this.isLoggedIn = false;
+        this.currentUser = null;
+        this.init();
+    }
+
+    async init() {
+        await this.checkLoginStatus();
+        await this.loadEvents();
+        this.updateNavbar();
+    }
+
+    async checkLoginStatus() {
+        try {
+            // Check if user is logged in by making a request to get-user-info
+            const response = await fetch('get-user-info.php');
+            if (response.ok) {
+                this.isLoggedIn = true;
+                this.currentUser = await response.json();
+            } else {
+                this.isLoggedIn = false;
+                this.currentUser = null;
+            }
+        } catch (error) {
+            this.isLoggedIn = false;
+            this.currentUser = null;
+        }
+    }
+
+    updateNavbar() {
+        const adminLink = document.getElementById('adminLink');
+        const loginLink = document.getElementById('loginLink');
+        const registerLink = document.getElementById('registerLink');
+        const logoutLink = document.getElementById('logoutLink');
+
+        if (this.isLoggedIn) {
+            if (adminLink) adminLink.style.display = 'block';
+            if (loginLink) loginLink.style.display = 'none';
+            if (registerLink) registerLink.style.display = 'none';
+            if (logoutLink) logoutLink.style.display = 'block';
+        } else {
+            if (adminLink) adminLink.style.display = 'none';
+            if (loginLink) loginLink.style.display = 'block';
+            if (registerLink) registerLink.style.display = 'block';
+            if (logoutLink) logoutLink.style.display = 'none';
+        }
+    }
+
+    async loadEvents() {
+        try {
+            const response = await fetch('events-api.php');
+            const events = await response.json();
+            this.displayEvents(events);
+        } catch (error) {
+            console.error('Error loading events:', error);
+            this.showError('Failed to load events');
+        }
+    }
+
+    displayEvents(events) {
+        if (!this.eventsGrid) return;
+
+        this.eventsGrid.innerHTML = '';
+
+        if (events.length === 0) {
+            this.eventsGrid.innerHTML = '<p style="text-align: center; color: #ccc; grid-column: 1 / -1;">No upcoming events.</p>';
+            return;
+        }
+
+        events.forEach(event => {
+            const eventCard = this.createEventCard(event);
+            this.eventsGrid.appendChild(eventCard);
+        });
+    }
+
+    createEventCard(event) {
+        const card = document.createElement('div');
+        card.className = 'event-card';
+
+        const isRSVPed = this.isLoggedIn && event.rsvps.includes(this.currentUser?.email || '');
+
+        card.innerHTML = `
+            <div class="event-image">
+                <img src="${event.image}" alt="${event.title}">
+            </div>
+            <div class="event-info">
+                <h3>${event.title}</h3>
+                <p class="event-date">${event.date}</p>
+                <p class="event-description">${event.description}</p>
+                <div class="event-actions">
+                    ${this.isLoggedIn ? `
+                        <button class="rsvp-btn ${isRSVPed ? 'rsvp-cancel' : 'rsvp-join'}"
+                                data-event-id="${event.id}"
+                                data-action="${isRSVPed ? 'cancel' : 'rsvp'}">
+                            ${isRSVPed ? 'Cancel RSVP' : 'RSVP'}
+                        </button>
+                        <span class="rsvp-count">${event.rsvps.length} attending</span>
+                    ` : `
+                        <a href="login.php" class="rsvp-btn rsvp-login">Login to RSVP</a>
+                        <span class="rsvp-count">${event.rsvps.length} attending</span>
+                    `}
+                </div>
+            </div>
+        `;
+
+        // Add event listener for RSVP button
+        const rsvpBtn = card.querySelector('.rsvp-btn');
+        if (rsvpBtn && !rsvpBtn.classList.contains('rsvp-login')) {
+            rsvpBtn.addEventListener('click', (e) => this.handleRSVP(e, event.id));
+        }
+
+        return card;
+    }
+
+    async handleRSVP(e, eventId) {
+        e.preventDefault();
+
+        const button = e.target;
+        const action = button.dataset.action;
+        const originalText = button.textContent;
+
+        button.disabled = true;
+        button.textContent = 'Processing...';
+
+        try {
+            const response = await fetch('events-api.php', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id: eventId,
+                    action: action
+                })
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                showToast(action === 'rsvp' ? 'RSVP successful!' : 'RSVP cancelled', 'success');
+                await this.loadEvents(); // Reload events to update counts
+            } else {
+                const error = await response.json();
+                showToast(error.error || 'RSVP failed', 'error');
+                button.disabled = false;
+                button.textContent = originalText;
+            }
+        } catch (error) {
+            console.error('RSVP error:', error);
+            showToast('RSVP failed', 'error');
+            button.disabled = false;
+            button.textContent = originalText;
+        }
+    }
+
+    showError(message) {
+        if (!this.eventsGrid) return;
+
+        this.eventsGrid.innerHTML = `
+            <div style="text-align: center; color: #ff6b6b; grid-column: 1 / -1;">
+                <p>${message}</p>
+                <button onclick="location.reload()" style="background: #00d4ff; color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">Retry</button>
+            </div>
+        `;
+    }
+}
+
+// =====================================================
 // INITIALIZATION
 // =====================================================
 
@@ -559,6 +754,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Membership form handling
     new MembershipForm();
+
+    // Dynamic events management
+    new EventsManager();
 
     // CTA button handler
     const ctaButton = document.querySelector('.cta-button');
