@@ -1,5 +1,7 @@
 <?php
-require_once 'auth.php';
+require_once __DIR__ . '/auth.php';
+
+header('Content-Type: application/json');
 
 if (!is_logged_in()) {
     http_response_code(401);
@@ -8,7 +10,7 @@ if (!is_logged_in()) {
 }
 
 echo json_encode([
-    'name' => $_SESSION['member_name'],
-    'email' => $_SESSION['member_email']
+    'name'  => $_SESSION['user_name'],
+    'email' => $_SESSION['user_email'],
+    'role'  => $_SESSION['role']
 ]);
-?>

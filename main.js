@@ -582,22 +582,8 @@ class EventsManager {
     }
 
     updateNavbar() {
-        const adminLink = document.getElementById('adminLink');
-        const loginLink = document.getElementById('loginLink');
-        const registerLink = document.getElementById('registerLink');
-        const logoutLink = document.getElementById('logoutLink');
-
-        if (this.isLoggedIn) {
-            if (adminLink) adminLink.style.display = 'block';
-            if (loginLink) loginLink.style.display = 'none';
-            if (registerLink) registerLink.style.display = 'none';
-            if (logoutLink) logoutLink.style.display = 'block';
-        } else {
-            if (adminLink) adminLink.style.display = 'none';
-            if (loginLink) loginLink.style.display = 'block';
-            if (registerLink) registerLink.style.display = 'block';
-            if (logoutLink) logoutLink.style.display = 'none';
-        }
+        // Navbar is now server-rendered by PHP (render_navbar in auth.php)
+        // No client-side manipulation needed — role-based links are already correct
     }
 
     async loadEvents() {

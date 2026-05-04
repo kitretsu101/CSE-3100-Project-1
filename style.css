@@ -1198,3 +1198,371 @@ a:focus {
         transition-duration: 0.01ms !important;
     }
 }
+
+/* ============================================================
+   ALERT MESSAGES
+   ============================================================ */
+
+.alert {
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.alert ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+.alert ul li::before {
+    content: '⚠ ';
+}
+
+.alert-error {
+    background: linear-gradient(135deg, #fff5f5, #ffe8e8);
+    border: 1px solid #feb2b2;
+    color: #9b2c2c;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #f0fff4, #e6ffed);
+    border: 1px solid #9ae6b4;
+    color: #276749;
+}
+
+/* ============================================================
+   FORM FOOTER LINK
+   ============================================================ */
+
+.form-footer {
+    margin-top: 1.5rem;
+    text-align: center;
+    color: var(--text-lighter);
+    font-size: 0.95rem;
+}
+
+.form-footer a {
+    color: var(--primary-color);
+    font-weight: 600;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.form-footer a:hover {
+    text-decoration: underline;
+}
+
+/* ============================================================
+   PROFILE PAGE
+   ============================================================ */
+
+.profile-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    padding: 2rem 0;
+}
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #ffffff;
+    font-family: 'JetBrains Mono', monospace;
+    box-shadow: 0 8px 25px rgba(32, 178, 170, 0.3);
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.profile-details {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.profile-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border: 1px solid rgba(32, 178, 170, 0.1);
+    transition: var(--transition);
+}
+
+.profile-row:hover {
+    border-color: rgba(32, 178, 170, 0.3);
+    box-shadow: 0 4px 12px rgba(32, 178, 170, 0.08);
+}
+
+.profile-label {
+    font-weight: 600;
+    color: var(--text-lighter);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.profile-value {
+    font-weight: 600;
+    color: var(--text-light);
+    font-size: 1rem;
+}
+
+.role-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.role-user {
+    background: linear-gradient(135deg, #e6fffa, #b2f5ea);
+    color: #234e52;
+}
+
+.role-admin {
+    background: linear-gradient(135deg, #fefcbf, #fbd38d);
+    color: #744210;
+}
+
+.profile-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+@media (max-width: 480px) {
+    .profile-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.3rem;
+    }
+
+    .profile-actions {
+        flex-direction: column;
+    }
+}
+
+/* ============================================================
+   NAVBAR TOGGLE (HAMBURGER)
+   ============================================================ */
+
+.nav-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    z-index: 1001;
+}
+
+.nav-toggle span {
+    display: block;
+    width: 26px;
+    height: 3px;
+    background: var(--primary-color);
+    border-radius: 3px;
+    transition: var(--transition);
+}
+
+.nav-toggle.active span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 6px);
+}
+
+.nav-toggle.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.nav-toggle.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(5px, -6px);
+}
+
+@media (max-width: 768px) {
+    .nav-toggle {
+        display: flex;
+    }
+
+    .nav-menu {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 280px;
+        height: 100vh;
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(20px);
+        flex-direction: column;
+        padding: 5rem 2rem 2rem;
+        gap: 1rem;
+        box-shadow: -5px 0 30px rgba(0, 0, 0, 0.1);
+        transition: right 0.3s ease;
+        z-index: 1000;
+    }
+
+    .nav-menu.active {
+        right: 0;
+    }
+}
+
+/* ============================================================
+   NAVBAR CTA & ROLE-BASED LINK STYLES
+   ============================================================ */
+
+.nav-cta {
+    background: var(--primary-color);
+    color: #ffffff !important;
+    padding: 0.5rem 1.2rem !important;
+    border-radius: 50px;
+    font-weight: 700 !important;
+    transition: var(--transition-smooth) !important;
+    box-shadow: 0 4px 15px rgba(32, 178, 170, 0.25);
+}
+
+.nav-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(32, 178, 170, 0.4);
+}
+
+.nav-cta::after {
+    display: none !important;
+}
+
+.nav-admin {
+    background: linear-gradient(135deg, #7b2ff7, #c850c0);
+    color: #ffffff !important;
+    padding: 0.5rem 1.2rem !important;
+    border-radius: 50px;
+    font-weight: 700 !important;
+    transition: var(--transition-smooth) !important;
+    box-shadow: 0 4px 15px rgba(123, 47, 247, 0.25);
+}
+
+.nav-admin:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(123, 47, 247, 0.4);
+}
+
+.nav-admin::after {
+    display: none !important;
+}
+
+.nav-cta-danger {
+    background: transparent;
+    color: #e53e3e !important;
+    border: 2px solid #e53e3e;
+    padding: 0.4rem 1rem !important;
+    border-radius: 50px;
+    font-weight: 700 !important;
+    transition: var(--transition-smooth) !important;
+}
+
+.nav-cta-danger:hover {
+    background: #e53e3e;
+    color: #ffffff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(229, 62, 62, 0.3);
+}
+
+.nav-cta-danger::after {
+    display: none !important;
+}
+
+/* ============================================================
+   RSVP BUTTONS (Events Section)
+   ============================================================ */
+
+.rsvp-btn {
+    display: inline-block;
+    padding: 0.5rem 1.2rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: var(--transition);
+    font-family: 'Poppins', sans-serif;
+}
+
+.rsvp-join {
+    background: var(--primary-color);
+    color: #ffffff;
+}
+
+.rsvp-join:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(32, 178, 170, 0.3);
+}
+
+.rsvp-cancel {
+    background: transparent;
+    color: #e53e3e;
+    border: 1px solid #e53e3e;
+}
+
+.rsvp-cancel:hover {
+    background: #e53e3e;
+    color: #ffffff;
+}
+
+.rsvp-login {
+    background: #f8f9fa;
+    color: var(--primary-color);
+    border: 1px solid rgba(32, 178, 170, 0.3);
+}
+
+.rsvp-login:hover {
+    background: var(--primary-color);
+    color: #ffffff;
+}
+
+.event-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-top: 1rem;
+}
+
+.rsvp-count {
+    font-size: 0.85rem;
+    color: var(--text-lighter);
+    font-weight: 600;
+}
+
+/* ============================================================
+   PASSWORD INPUT STYLING
+   ============================================================ */
+
+.form-group input[type="password"] {
+    padding: 0.8rem 1rem;
+    background: #ffffff;
+    border: 2px solid rgba(32, 178, 170, 0.3);
+    border-radius: 8px;
+    color: var(--text-light);
+    font-family: 'Poppins', sans-serif;
+    transition: var(--transition);
+    font-size: 0.95rem;
+}
+
+.form-group input[type="password"]:focus {
+    outline: none;
+    background: #ffffff;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 15px rgba(32, 178, 170, 0.2);
+}

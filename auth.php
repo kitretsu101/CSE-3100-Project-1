@@ -1,63 +1,83 @@
 <?php
+/**
+ * Authentication Helper Functions
+ * Provides session management and role-based access control
+ */
+
 session_start();
 
-const USER_FILE = __DIR__ . '/users.txt';
+require_once __DIR__ . '/db.php';
 
+/**
+ * Sanitize user input to prevent XSS
+ */
 function sanitize_input(string $value): string
 {
     return htmlspecialchars(trim($value), ENT_QUOTES, 'UTF-8');
 }
 
-function load_users(): array
-{
-    if (!file_exists(USER_FILE)) {
-        return [];
-    }
-
-    $lines = file(USER_FILE, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    $users = [];
-
-    foreach ($lines as $line) {
-        $parts = explode('|', $line, 3);
-        if (count($parts) !== 3) {
-            continue;
-        }
-
-        [$name, $email, $hash] = $parts;
-        $users[strtolower(trim($email))] = [
-            'name' => trim($name),
-            'email' => trim($email),
-            'hash' => trim($hash),
-        ];
-    }
-
-    return $users;
-}
-
+/**
+ * Find a user by email using prepared statements
+ */
 function find_user_by_email(string $email): ?array
 {
-    $users = load_users();
-    $key = strtolower($email);
-    return $users[$key] ?? null;
+    global $conn;
+    $stmt = $conn->prepare("SELECT id, name, email, password, role FROM users WHERE email = ?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $user = $result->fetch_assoc();
+    $stmt->close();
+    return $user ?: null;
 }
 
+/**
+ * Check if an email already exists in the database
+ */
+function email_exists(string $email): bool
+{
+    return find_user_by_email($email) !== null;
+}
+
+/**
+ * Save a new user to the database (role always defaults to 'user')
+ */
 function save_user(string $name, string $email, string $passwordHash): bool
 {
-    $line = sprintf("%s|%s|%s\n", $name, $email, $passwordHash);
-    return (bool) file_put_contents(USER_FILE, $line, FILE_APPEND | LOCK_EX);
+    global $conn;
+    $role = 'user'; // ALWAYS 'user' on registration — admin is set manually in DB
+    $stmt = $conn->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("ssss", $name, $email, $passwordHash, $role);
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
 }
 
+/**
+ * Check if the current visitor is logged in
+ */
 function is_logged_in(): bool
 {
-    return !empty($_SESSION['member_email']) && !empty($_SESSION['member_name']);
+    return !empty($_SESSION['user_id']) && !empty($_SESSION['user_name']) && !empty($_SESSION['role']);
 }
 
-function login_member(string $name, string $email): void
+/**
+ * Log a user in by storing their data in the session
+ */
+function login_member(int $id, string $name, string $email, string $role): void
 {
-    $_SESSION['member_name'] = $name;
-    $_SESSION['member_email'] = $email;
+    $_SESSION['user_id']    = $id;
+    $_SESSION['user_name']  = $name;
+    $_SESSION['user_email'] = $email;
+    $_SESSION['role']       = $role;
+
+    // Regenerate session ID to prevent session fixation attacks
+    session_regenerate_id(true);
 }
 
+/**
+ * Destroy the session and log the user out
+ */
 function logout_member(): void
 {
     $_SESSION = [];
@@ -71,6 +91,9 @@ function logout_member(): void
     session_destroy();
 }
 
+/**
+ * Redirect to login page if the user is not logged in
+ */
 function require_login(): void
 {
     if (!is_logged_in()) {
@@ -79,7 +102,73 @@ function require_login(): void
     }
 }
 
+/**
+ * Redirect to index if the user is not an admin
+ */
+function require_admin(): void
+{
+    require_login();
+    if ($_SESSION['role'] !== 'admin') {
+        header('Location: index.php');
+        exit;
+    }
+}
+
+/**
+ * Get the current user's display name
+ */
 function current_member_name(): string
 {
-    return $_SESSION['member_name'] ?? '';
+    return $_SESSION['user_name'] ?? '';
+}
+
+/**
+ * Get the current user's role
+ */
+function current_role(): string
+{
+    return $_SESSION['role'] ?? '';
+}
+
+/**
+ * Generate a dynamic navbar based on login state and role
+ */
+function render_navbar(): string
+{
+    $loggedIn = is_logged_in();
+    $role     = current_role();
+
+    $html = '<nav class="navbar">
+        <div class="nav-container">
+            <div class="logo"><span class="logo-text">Bit2byte</span></div>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span></span><span></span><span></span>
+            </button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="index.php" class="nav-link">Home</a></li>
+                <li><a href="index.php#about" class="nav-link">About</a></li>';
+
+    if (!$loggedIn) {
+        // Guest: show Login & Register
+        $html .= '
+                <li><a href="login.php" class="nav-link">Login</a></li>
+                <li><a href="register.php" class="nav-link nav-cta">Register</a></li>';
+    } elseif ($role === 'admin') {
+        // Admin: show Admin Panel & Logout
+        $html .= '
+                <li><a href="admin.php" class="nav-link nav-admin">Admin Panel</a></li>
+                <li><a href="logout.php" class="nav-link nav-cta-danger">Logout</a></li>';
+    } else {
+        // Normal user: show Profile & Logout
+        $html .= '
+                <li><a href="profile.php" class="nav-link">Profile</a></li>
+                <li><a href="logout.php" class="nav-link nav-cta-danger">Logout</a></li>';
+    }
+
+    $html .= '
+            </ul>
+        </div>
+    </nav>';
+
+    return $html;
 }

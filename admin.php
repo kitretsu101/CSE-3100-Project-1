@@ -1,23 +1,34 @@
 <?php
-require_once 'auth.php';
-require_login();
-?>
-<!DOCTYPE html>
+require_once __DIR__ . '/auth.php';
+
+// *** CRITICAL SECURITY FIX ***
+// Only admins can access this page — normal users are redirected to home
+require_admin();
+
+$adminName = htmlspecialchars(current_member_name(), ENT_QUOTES, 'UTF-8');
+?><!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Bit2byte Events</title>
+    <title>Admin Dashboard - Bit2byte</title>
+    <meta name="description" content="Bit2byte admin dashboard for managing events and users.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="animations.css">
     <style>
+        .admin-wrapper {
+            min-height: calc(100vh - 80px);
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            padding: 2rem;
+            color: #fff;
+        }
+
         .admin-container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 2rem;
         }
 
         .admin-header {
@@ -25,14 +36,65 @@ require_login();
             margin-bottom: 2rem;
         }
 
+        .admin-header h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, #00d4ff, #7b2ff7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .admin-header p {
+            color: #a0aec0;
+            margin-top: 0.5rem;
+        }
+
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .admin-stat-card {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .admin-stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.15);
+        }
+
+        .admin-stat-card .stat-num {
+            font-size: 2.5rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            color: #00d4ff;
+        }
+
+        .admin-stat-card .stat-lbl {
+            font-size: 0.9rem;
+            color: #a0aec0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 0.3rem;
+        }
+
         .admin-nav {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 1rem;
+            background: rgba(255, 255, 255, 0.06);
+            padding: 1rem 1.5rem;
             border-radius: 10px;
             margin-bottom: 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .admin-nav a {
@@ -41,6 +103,7 @@ require_login();
             padding: 0.5rem 1rem;
             border-radius: 5px;
             transition: background 0.3s;
+            font-weight: 600;
         }
 
         .admin-nav a:hover {
@@ -55,19 +118,20 @@ require_login();
             border: 1px solid rgba(0, 212, 255, 0.2);
         }
 
-        .form-group {
-            margin-bottom: 1rem;
+        .event-form h2 {
+            color: #00d4ff;
+            margin-bottom: 1.5rem;
         }
 
-        .form-group label {
+        .event-form .form-group label {
             display: block;
             margin-bottom: 0.5rem;
             color: #00d4ff;
             font-weight: 600;
         }
 
-        .form-group input,
-        .form-group textarea {
+        .event-form .form-group input,
+        .event-form .form-group textarea {
             width: 100%;
             padding: 0.75rem;
             border: 1px solid rgba(0, 212, 255, 0.3);
@@ -77,7 +141,7 @@ require_login();
             font-family: 'Poppins', sans-serif;
         }
 
-        .form-group textarea {
+        .event-form .form-group textarea {
             resize: vertical;
             min-height: 100px;
         }
@@ -200,45 +264,78 @@ require_login();
             font-size: 0.8rem;
             color: #00d4ff;
         }
+
+        /* Toast styles */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 2000;
+            animation: slideInUp 0.3s ease;
+        }
+        .toast-success { background: #00c853; }
+        .toast-error { background: #ff5252; }
+
+        @media (max-width: 768px) {
+            .admin-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .event-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="admin-container">
-        <div class="admin-header">
-            <h1>Event Management Dashboard</h1>
-            <p>Welcome, <?php echo htmlspecialchars(current_member_name()); ?>!</p>
-        </div>
+    <div class="admin-wrapper">
+        <div class="admin-container">
+            <div class="admin-header">
+                <h1>🛡️ Admin Dashboard</h1>
+                <p>Welcome, <?php echo $adminName; ?>! You are logged in as <strong>Admin</strong>.</p>
+            </div>
 
-        <div class="admin-nav">
-            <a href="index.html">← Back to Website</a>
-            <a href="logout.php">Logout</a>
-        </div>
+            <div class="admin-nav">
+                <a href="index.php">← Back to Website</a>
+                <a href="logout.php">Logout</a>
+            </div>
 
-        <div class="event-form">
-            <h2>Add New Event</h2>
-            <form id="addEventForm">
-                <div class="form-group">
-                    <label for="title">Event Title</label>
-                    <input type="text" id="title" name="title" required>
-                </div>
-                <div class="form-group">
-                    <label for="date">Event Date</label>
-                    <input type="date" id="date" name="date" required>
-                </div>
-                <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea id="description" name="description" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="image">Image URL (optional)</label>
-                    <input type="url" id="image" name="image" placeholder="https://...">
-                </div>
-                <button type="submit" class="btn btn-primary">Add Event</button>
-            </form>
-        </div>
+            <div class="admin-stats" id="adminStats">
+                <!-- Stats loaded via JS -->
+            </div>
 
-        <div class="events-list" id="eventsList">
-            <!-- Events will be loaded here -->
+            <div class="event-form">
+                <h2>Add New Event</h2>
+                <form id="addEventForm">
+                    <div class="form-group">
+                        <label for="title">Event Title</label>
+                        <input type="text" id="title" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="date">Event Date</label>
+                        <input type="date" id="date" name="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="image">Image URL (optional)</label>
+                        <input type="url" id="image" name="image" placeholder="https://...">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Event</button>
+                </form>
+            </div>
+
+            <div class="events-list" id="eventsList">
+                <!-- Events will be loaded here -->
+            </div>
         </div>
     </div>
 
@@ -284,16 +381,40 @@ require_login();
                 const response = await fetch('events-api.php');
                 events = await response.json();
                 displayEvents();
+                updateStats();
             } catch (error) {
                 console.error('Error loading events:', error);
                 showToast('Error loading events', 'error');
             }
         }
 
+        // Update admin stats
+        function updateStats() {
+            const statsContainer = document.getElementById('adminStats');
+            const totalEvents = events.length;
+            const totalRSVPs = events.reduce((sum, e) => sum + (e.rsvps ? e.rsvps.length : 0), 0);
+
+            statsContainer.innerHTML = `
+                <div class="admin-stat-card">
+                    <div class="stat-num">${totalEvents}</div>
+                    <div class="stat-lbl">Total Events</div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="stat-num">${totalRSVPs}</div>
+                    <div class="stat-lbl">Total RSVPs</div>
+                </div>
+            `;
+        }
+
         // Display events
         function displayEvents() {
             const eventsList = document.getElementById('eventsList');
             eventsList.innerHTML = '';
+
+            if (events.length === 0) {
+                eventsList.innerHTML = '<p style="text-align:center;color:#a0aec0;padding:2rem;">No events yet. Add your first event above!</p>';
+                return;
+            }
 
             events.forEach(event => {
                 const eventItem = document.createElement('div');
@@ -303,7 +424,7 @@ require_login();
                         <h3>${event.title}</h3>
                         <p><strong>Date:</strong> ${event.date}</p>
                         <p>${event.description.substring(0, 100)}${event.description.length > 100 ? '...' : ''}</p>
-                        <span class="rsvp-count">${event.rsvps.length} RSVPs</span>
+                        <span class="rsvp-count">${event.rsvps ? event.rsvps.length : 0} RSVPs</span>
                     </div>
                     <div class="event-actions">
                         <button class="btn btn-secondary btn-small" onclick="editEvent(${event.id})">Edit</button>
@@ -329,9 +450,7 @@ require_login();
             try {
                 const response = await fetch('events-api.php', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(eventData)
                 });
 
@@ -363,7 +482,6 @@ require_login();
             document.getElementById('editModal').classList.add('show');
         }
 
-        // Close edit modal
         function closeEditModal() {
             document.getElementById('editModal').classList.remove('show');
         }
@@ -384,9 +502,7 @@ require_login();
             try {
                 const response = await fetch('events-api.php', {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(eventData)
                 });
 
@@ -411,9 +527,7 @@ require_login();
             try {
                 const response = await fetch('events-api.php', {
                     method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: id })
                 });
 
@@ -436,10 +550,7 @@ require_login();
             toast.className = `toast toast-${type}`;
             toast.textContent = message;
             document.body.appendChild(toast);
-
-            setTimeout(() => {
-                toast.remove();
-            }, 3000);
+            setTimeout(() => { toast.remove(); }, 3000);
         }
 
         // Load events on page load
