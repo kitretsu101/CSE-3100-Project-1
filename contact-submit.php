@@ -1,4 +1,10 @@
 <?php
+/**
+ * Contact Form Submission Handler
+ * Stores messages in MySQL contact_messages table
+ */
+require_once __DIR__ . '/db.php';
+
 header('Content-Type: application/json; charset=utf-8');
 
 $response = [
@@ -13,8 +19,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$name = htmlspecialchars(trim($_POST['name'] ?? ''), ENT_QUOTES, 'UTF-8');
-$email = htmlspecialchars(trim($_POST['email'] ?? ''), ENT_QUOTES, 'UTF-8');
+$name    = htmlspecialchars(trim($_POST['name'] ?? ''), ENT_QUOTES, 'UTF-8');
+$email   = htmlspecialchars(trim($_POST['email'] ?? ''), ENT_QUOTES, 'UTF-8');
 $message = htmlspecialchars(trim($_POST['message'] ?? ''), ENT_QUOTES, 'UTF-8');
 
 if (!$name || !$email || !$message) {
@@ -31,37 +37,17 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     exit;
 }
 
-$timestamp = date('Y-m-d H:i:s');
-$logLine = sprintf("[%s] Name: %s | Email: %s | Message: %s\n", $timestamp, $name, $email, $message);
-$messagesFile = __DIR__ . '/messages.txt';
+// Store in database using prepared statement
+$stmt = $conn->prepare("INSERT INTO contact_messages (name, email, message) VALUES (?, ?, ?)");
+$stmt->bind_param("sss", $name, $email, $message);
 
-if (file_put_contents($messagesFile, $logLine, FILE_APPEND | LOCK_EX) === false) {
+if ($stmt->execute()) {
+    $response['status'] = 'success';
+    $response['message'] = 'Message sent successfully! We\'ll get back to you soon.';
+} else {
     http_response_code(500);
-    $response['message'] = 'Could not save message to file.';
-    echo json_encode($response);
-    exit;
+    $response['message'] = 'Could not save your message. Please try again later.';
 }
 
-$clubEmail = 'club@example.com';
-$mailFrom = 'no-reply@yourdomain.com';
-$emailSubject = 'New Bit2byte Contact Form Submission';
-$emailBody = "You have received a new message from the website contact form:\n\n";
-$emailBody .= "Name: {$name}\n";
-$emailBody .= "Email: {$email}\n\n";
-$emailBody .= "Message:\n{$message}\n";
-
-$headers = "From: Bit2byte <{$mailFrom}>\r\n";
-$headers .= "Reply-To: {$email}\r\n";
-
-$mailSent = mail($clubEmail, $emailSubject, $emailBody, $headers);
-if (!$mailSent) {
-    http_response_code(500);
-    $response['message'] = 'Message saved, but email notification failed.';
-    echo json_encode($response);
-    exit;
-}
-
-$response['status'] = 'success';
-$response['message'] = 'Message sent successfully!';
-
+$stmt->close();
 echo json_encode($response);
