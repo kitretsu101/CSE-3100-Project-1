@@ -555,10 +555,12 @@ class EventsManager {
         this.eventsGrid = document.getElementById('eventsGrid');
         this.isLoggedIn = false;
         this.currentUser = null;
+        console.log('🔧 EventsManager initialized', { eventsGrid: !!this.eventsGrid });
         this.init();
     }
 
     async init() {
+        console.log('🚀 EventsManager.init() starting...');
         await this.checkLoginStatus();
         await this.loadEvents();
         this.updateNavbar();
@@ -588,29 +590,50 @@ class EventsManager {
 
     async loadEvents() {
         try {
+            console.log('📡 Fetching events from events-api.php...');
             const response = await fetch('events-api.php');
-            const events = await response.json();
+            console.log('Response status:', response.status);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const text = await response.text();
+            console.log('Raw response:', text.substring(0, 200));
+            
+            const events = JSON.parse(text);
+            console.log('✓ Parsed events:', events.length, 'events found');
+            console.log('First event:', events[0]);
+            
             this.displayEvents(events);
         } catch (error) {
-            console.error('Error loading events:', error);
-            this.showError('Failed to load events');
+            console.error('❌ Error loading events:', error);
+            this.showError('Failed to load events: ' + error.message);
         }
     }
 
     displayEvents(events) {
-        if (!this.eventsGrid) return;
+        if (!this.eventsGrid) {
+            console.error('❌ eventsGrid element not found!');
+            return;
+        }
 
+        console.log('📍 eventsGrid found, clearing and adding', events.length, 'events');
         this.eventsGrid.innerHTML = '';
 
         if (events.length === 0) {
+            console.warn('⚠️ No events to display');
             this.eventsGrid.innerHTML = '<p style="text-align: center; color: #ccc; grid-column: 1 / -1;">No upcoming events.</p>';
             return;
         }
 
-        events.forEach(event => {
+        events.forEach((event, index) => {
+            console.log(`Adding event ${index + 1}:`, event.title);
             const eventCard = this.createEventCard(event);
             this.eventsGrid.appendChild(eventCard);
         });
+        
+        console.log('✓ All events displayed');
     }
 
     createEventCard(event) {
@@ -705,6 +728,77 @@ class EventsManager {
 }
 
 // =====================================================
+// MEMBERS LOADER
+// =====================================================
+
+class MembersLoader {
+    constructor() {
+        this.teamGrid = document.getElementById('teamGrid');
+        this.init();
+    }
+
+    async init() {
+        if (!this.teamGrid) return;
+        await this.loadMembers();
+    }
+
+    async loadMembers() {
+        try {
+            const response = await fetch('get-all-members.php');
+            const data = await response.json();
+
+            if (data.success) {
+                const members = data.members.slice(0, 6); // Show only first 6 members
+                this.displayMembers(members);
+            } else {
+                this.showError('Failed to load members');
+            }
+        } catch (error) {
+            console.error('Error loading members:', error);
+            this.showError('Failed to load members');
+        }
+    }
+
+    displayMembers(members) {
+        this.teamGrid.innerHTML = '';
+
+        if (members.length === 0) {
+            this.teamGrid.innerHTML = '<p style="text-align: center; color: #ccc; grid-column: 1 / -1;">No members yet. Be the first to join!</p>';
+            return;
+        }
+
+        members.forEach((member, index) => {
+            const card = document.createElement('div');
+            card.className = 'team-card';
+            card.style.animationDelay = `${index * 0.1}s`;
+
+            card.innerHTML = `
+                <div class="team-image">
+                    <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #00d4ff, #0084b4); display: flex; align-items: center; justify-content: center; font-size: 3rem;">👤</div>
+                </div>
+                <div class="team-info">
+                    <h3>${this.escapeHtml(member.full_name)}</h3>
+                    <p class="role">${member.department || 'Member'}</p>
+                </div>
+            `;
+
+            this.teamGrid.appendChild(card);
+        });
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    showError(message) {
+        if (!this.teamGrid) return;
+        this.teamGrid.innerHTML = `<p style="text-align: center; color: #ff6b6b; grid-column: 1 / -1;">${message}</p>`;
+    }
+}
+
+// =====================================================
 // INITIALIZATION
 // =====================================================
 
@@ -743,6 +837,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Dynamic events management
     new EventsManager();
+
+    // Members loader
+    new MembersLoader();
 
     // CTA button handler
     const ctaButton = document.querySelector('.cta-button');

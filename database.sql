@@ -39,6 +39,17 @@ CREATE TABLE IF NOT EXISTS `events` (
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ─── Event Attendees Table (for RSVP tracking) ───────────────
+CREATE TABLE IF NOT EXISTS `event_attendees` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `event_id` INT NOT NULL,
+    `user_id` INT NOT NULL,
+    `rsvp_date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (`event_id`) REFERENCES `events`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+    UNIQUE KEY `unique_rsvp` (`event_id`, `user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ─── Seed Admin Account ─────────────────────────────────────
 -- Password: admin123 (hashed with PHP password_hash)
 -- You can also let the application auto-seed this on first load

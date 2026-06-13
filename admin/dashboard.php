@@ -106,18 +106,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $title = sanitize_input($_POST['event_title'] ?? '');
         $desc  = sanitize_input($_POST['event_desc'] ?? '');
         $date  = sanitize_input($_POST['event_date'] ?? '');
-        if ($title && $date) {
-            $stmt = $conn->prepare("INSERT INTO events (title, description, event_date) VALUES (?, ?, ?)");
-            $stmt->bind_param("sss", $title, $desc, $date);
-            $stmt->execute();
-            $stmt->close();
+        $image = null;
+
+        // Handle image upload
+        if (isset($_FILES['event_image']) && $_FILES['event_image']['error'] === UPLOAD_ERR_OK) {
+            $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            $fileName = $_FILES['event_image']['name'];
+            $fileTmp = $_FILES['event_image']['tmp_name'];
+            $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+            if (in_array($fileExt, $allowed) && $_FILES['event_image']['size'] <= 5242880) { // 5MB max
+                $uploadDir = __DIR__ . '/../uploads/events/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+
+                $newFileName = 'event_' . time() . '_' . uniqid() . '.' . $fileExt;
+                $uploadPath = $uploadDir . $newFileName;
+
+                if (move_uploaded_file($fileTmp, $uploadPath)) {
+                    $image = 'uploads/events/' . $newFileName;
+                }
+            }
         }
-        header("Location: dashboard.php?tab=events&msg=added");
-        exit;
+
+        if ($title && $date) {
+            $stmt = $conn->prepare("INSERT INTO events (title, description, event_date, image) VALUES (?, ?, ?, ?)");
+            if (!$stmt) {
+                header("Location: dashboard.php?tab=events&msg=error&err=" . urlencode($conn->error));
+                exit;
+            }
+            $stmt->bind_param("ssss", $title, $desc, $date, $image);
+            if ($stmt->execute()) {
+                header("Location: dashboard.php?tab=events&msg=added");
+                exit;
+            } else {
+                header("Location: dashboard.php?tab=events&msg=error&err=" . urlencode($stmt->error));
+                exit;
+            }
+            $stmt->close();
+        } else {
+            header("Location: dashboard.php?tab=events&msg=error&err=missing_fields");
+            exit;
+        }
     }
 
     if ($action === 'delete_event' && !empty($_POST['event_id'])) {
         $eid = (int)$_POST['event_id'];
+        
+        // Get image path to delete file
+        $imgStmt = $conn->prepare("SELECT image FROM events WHERE id = ?");
+        $imgStmt->bind_param("i", $eid);
+        $imgStmt->execute();
+        $imgResult = $imgStmt->get_result()->fetch_assoc();
+        $imgStmt->close();
+
+        if ($imgResult && $imgResult['image']) {
+            $imagePath = __DIR__ . '/../' . $imgResult['image'];
+            if (file_exists($imagePath)) {
+                @unlink($imagePath);
+            }
+        }
+
         $stmt = $conn->prepare("DELETE FROM events WHERE id = ?");
         $stmt->bind_param("i", $eid);
         $stmt->execute();
@@ -568,6 +618,7 @@ $activeTab = $_GET['tab'] ?? 'dashboard';
             <li><a href="?tab=dashboard" class="<?php echo $activeTab === 'dashboard' ? 'active' : ''; ?>"><i class="fas fa-th-large"></i> Dashboard</a></li>
             <li><a href="?tab=members" class="<?php echo $activeTab === 'members' ? 'active' : ''; ?>"><i class="fas fa-users"></i> Members</a></li>
             <li><a href="?tab=events" class="<?php echo $activeTab === 'events' ? 'active' : ''; ?>"><i class="fas fa-calendar-alt"></i> Events</a></li>
+            <li><a href="../manage-events.php"><i class="fas fa-plus-circle"></i> Publish Events</a></li>
             <li><a href="?tab=messages" class="<?php echo $activeTab === 'messages' ? 'active' : ''; ?>"><i class="fas fa-envelope"></i> Messages</a></li>
             <li><a href="?tab=subscriptions" class="<?php echo $activeTab === 'subscriptions' ? 'active' : ''; ?>"><i class="fas fa-credit-card"></i> Subscriptions</a></li>
             <li><a href="?tab=statistics" class="<?php echo $activeTab === 'statistics' ? 'active' : ''; ?>"><i class="fas fa-chart-bar"></i> Statistics</a></li>
@@ -724,13 +775,37 @@ $activeTab = $_GET['tab'] ?? 'dashboard';
         <!-- Events Tab -->
         <div class="content-card">
             <h2><i class="fas fa-plus-circle"></i> Add New Event</h2>
-            <form method="POST" class="event-form">
+            <form method="POST" enctype="multipart/form-data" class="event-form">
                 <input type="hidden" name="action" value="add_event">
-                <input type="text" name="event_title" placeholder="Event Title" required>
-                <input type="date" name="event_date" required>
-                <textarea name="event_desc" placeholder="Event Description" class="full-width"></textarea>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <input type="text" name="event_title" placeholder="Event Title" required style="padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 8px; font-family: inherit;">
+                    <input type="date" name="event_date" required style="padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 8px; font-family: inherit;">
+                </div>
+                <textarea name="event_desc" placeholder="Event Description" class="full-width" style="padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 8px; font-family: inherit; margin-bottom: 1rem; min-height: 100px;"></textarea>
+                
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-dark);">Upload Event Picture</label>
+                    <input type="file" name="event_image" id="adminEventImage" accept="image/*" style="display: block; padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 8px; width: 100%; margin-bottom: 0.5rem;">
+                    <div id="adminImagePreview" style="max-width: 200px; margin-top: 0.5rem;"></div>
+                </div>
+
                 <div><button type="submit" class="btn-add-event"><i class="fas fa-plus"></i> Add Event</button></div>
             </form>
+            <script>
+                document.getElementById('adminEventImage').addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    const preview = document.getElementById('adminImagePreview');
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            preview.innerHTML = '<img src="' + event.target.result + '" alt="Preview" style="max-width: 100%; border-radius: 8px;">';
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        preview.innerHTML = '';
+                    }
+                });
+            </script>
         </div>
 
         <div class="content-card">
@@ -740,10 +815,17 @@ $activeTab = $_GET['tab'] ?? 'dashboard';
             <?php else: ?>
             <div class="table-responsive">
                 <table class="table-custom">
-                    <thead><tr><th>Title</th><th>Date</th><th>Description</th><th>Action</th></tr></thead>
+                    <thead><tr><th>Image</th><th>Title</th><th>Date</th><th>Description</th><th>Action</th></tr></thead>
                     <tbody>
                         <?php foreach ($events as $e): ?>
                         <tr>
+                            <td>
+                                <?php if ($e['image']): ?>
+                                    <img src="<?php echo htmlspecialchars($e['image']); ?>" alt="Event" style="width: 50px; height: 50px; border-radius: 6px; object-fit: cover;">
+                                <?php else: ?>
+                                    <div style="width: 50px; height: 50px; background: #e2e8f0; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">📅</div>
+                                <?php endif; ?>
+                            </td>
                             <td><strong><?php echo htmlspecialchars($e['title']); ?></strong></td>
                             <td><?php echo date('M d, Y', strtotime($e['event_date'])); ?></td>
                             <td><?php echo htmlspecialchars(substr($e['description'] ?? '', 0, 80)); ?><?php echo strlen($e['description'] ?? '') > 80 ? '...' : ''; ?></td>

@@ -1,44 +1,67 @@
 <?php
 session_start();
+require_once 'db.php';
 require_once 'auth.php';
 
-const EVENTS_FILE = __DIR__ . '/events.json';
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
 
-function load_events(): array {
-    if (!file_exists(EVENTS_FILE)) {
-        return [];
+// Handle GET request - return all events with RSVP info
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    $userEmail = '';
+    if (is_logged_in()) {
+        $userEmail = $_SESSION['email'] ?? '';
     }
-    $content = file_get_contents(EVENTS_FILE);
-    return json_decode($content, true) ?? [];
-}
 
-function save_events(array $events): bool {
-    $json = json_encode($events, JSON_PRETTY_PRINT);
-    return file_put_contents(EVENTS_FILE, $json, LOCK_EX) !== false;
-}
-
-function generate_event_id(): int {
-    $events = load_events();
-    $maxId = 0;
-    foreach ($events as $event) {
-        if ($event['id'] > $maxId) {
-            $maxId = $event['id'];
+    $query = "SELECT id, title, description, event_date, image FROM events 
+              ORDER BY event_date ASC";
+    
+    $result = $conn->query($query);
+    $events = [];
+    
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            // Get RSVP count for this event
+            $rsvpQuery = "SELECT COUNT(*) as cnt FROM event_attendees WHERE event_id = ?";
+            $rsvpStmt = $conn->prepare($rsvpQuery);
+            $rsvpStmt->bind_param("i", $row['id']);
+            $rsvpStmt->execute();
+            $rsvpCount = $rsvpStmt->get_result()->fetch_assoc()['cnt'];
+            $rsvpStmt->close();
+            
+            // Get list of RSVPed users
+            $attendeesQuery = "SELECT u.email FROM event_attendees ea 
+                              JOIN users u ON ea.user_id = u.id 
+                              WHERE ea.event_id = ?";
+            $attendeesStmt = $conn->prepare($attendeesQuery);
+            $attendeesStmt->bind_param("i", $row['id']);
+            $attendeesStmt->execute();
+            $rsvps = [];
+            $attendeesResult = $attendeesStmt->get_result();
+            while ($attendeeRow = $attendeesResult->fetch_assoc()) {
+                $rsvps[] = htmlspecialchars($attendeeRow['email'], ENT_QUOTES, 'UTF-8');
+            }
+            $attendeesStmt->close();
+            
+            $events[] = [
+                'id' => $row['id'],
+                'title' => htmlspecialchars($row['title'], ENT_QUOTES, 'UTF-8'),
+                'description' => htmlspecialchars($row['description'] ?? '', ENT_QUOTES, 'UTF-8'),
+                'date' => date('M d, Y', strtotime($row['event_date'])),
+                'event_date' => $row['event_date'],
+                'image' => $row['image'] ? htmlspecialchars($row['image'], ENT_QUOTES, 'UTF-8') : 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=300&fit=crop',
+                'rsvps' => $rsvps
+            ];
         }
     }
-    return $maxId + 1;
-}
-
-// Handle GET request - return all events
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    header('Content-Type: application/json');
-    echo json_encode(load_events());
+    
+    echo json_encode($events);
     exit;
 }
 
 // Handle POST request - create new event (admin only)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Check if admin (for now, any logged in user can be admin)
-    if (!is_logged_in()) {
+    if (!is_logged_in() || !is_admin()) {
         http_response_code(401);
         echo json_encode(['error' => 'Unauthorized']);
         exit;
@@ -46,83 +69,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $data = json_decode(file_get_contents('php://input'), true);
 
-    if (!$data || !isset($data['title']) || !isset($data['date']) || !isset($data['description'])) {
+    if (!$data || !isset($data['title']) || !isset($data['event_date']) || !isset($data['description'])) {
         http_response_code(400);
         echo json_encode(['error' => 'Missing required fields']);
         exit;
     }
 
-    $events = load_events();
-    $newEvent = [
-        'id' => generate_event_id(),
-        'title' => sanitize_input($data['title']),
-        'date' => sanitize_input($data['date']),
-        'description' => sanitize_input($data['description']),
-        'image' => sanitize_input($data['image'] ?? 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=300&fit=crop'),
-        'rsvps' => []
-    ];
+    $title = sanitize_input($data['title']);
+    $description = sanitize_input($data['description']);
+    $event_date = sanitize_input($data['event_date']);
+    $image = isset($data['image']) ? sanitize_input($data['image']) : null;
 
-    $events[] = $newEvent;
+    $stmt = $conn->prepare("INSERT INTO events (title, description, event_date, image) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("ssss", $title, $description, $event_date, $image);
 
-    if (save_events($events)) {
-        header('Content-Type: application/json');
-        echo json_encode($newEvent);
+    if ($stmt->execute()) {
+        echo json_encode(['success' => true, 'id' => $stmt->insert_id]);
     } else {
         http_response_code(500);
-        echo json_encode(['error' => 'Failed to save event']);
+        echo json_encode(['error' => 'Failed to create event']);
     }
-    exit;
-}
-
-// Handle PUT request - update event (admin only)
-if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
-    if (!is_logged_in()) {
-        http_response_code(401);
-        echo json_encode(['error' => 'Unauthorized']);
-        exit;
-    }
-
-    $data = json_decode(file_get_contents('php://input'), true);
-
-    if (!$data || !isset($data['id'])) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Missing event ID']);
-        exit;
-    }
-
-    $events = load_events();
-    $found = false;
-
-    foreach ($events as &$event) {
-        if ($event['id'] == $data['id']) {
-            if (isset($data['title'])) $event['title'] = sanitize_input($data['title']);
-            if (isset($data['date'])) $event['date'] = sanitize_input($data['date']);
-            if (isset($data['description'])) $event['description'] = sanitize_input($data['description']);
-            if (isset($data['image'])) $event['image'] = sanitize_input($data['image']);
-            $found = true;
-            break;
-        }
-    }
-
-    if (!$found) {
-        http_response_code(404);
-        echo json_encode(['error' => 'Event not found']);
-        exit;
-    }
-
-    if (save_events($events)) {
-        header('Content-Type: application/json');
-        echo json_encode(['success' => true]);
-    } else {
-        http_response_code(500);
-        echo json_encode(['error' => 'Failed to update event']);
-    }
+    $stmt->close();
     exit;
 }
 
 // Handle DELETE request - delete event (admin only)
 if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
-    if (!is_logged_in()) {
+    if (!is_logged_in() || !is_admin()) {
         http_response_code(401);
         echo json_encode(['error' => 'Unauthorized']);
         exit;
@@ -130,34 +103,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
 
     $data = json_decode(file_get_contents('php://input'), true);
 
-    if (!$data || !isset($data['id'])) {
+    if (!isset($data['id'])) {
         http_response_code(400);
         echo json_encode(['error' => 'Missing event ID']);
         exit;
     }
 
-    $events = load_events();
-    $filtered = array_filter($events, function($event) use ($data) {
-        return $event['id'] != $data['id'];
-    });
+    $id = (int)$data['id'];
+    
+    $stmt = $conn->prepare("DELETE FROM events WHERE id = ?");
+    $stmt->bind_param("i", $id);
 
-    if (count($filtered) === count($events)) {
-        http_response_code(404);
-        echo json_encode(['error' => 'Event not found']);
-        exit;
-    }
-
-    if (save_events(array_values($filtered))) {
-        header('Content-Type: application/json');
+    if ($stmt->execute()) {
         echo json_encode(['success' => true]);
     } else {
         http_response_code(500);
         echo json_encode(['error' => 'Failed to delete event']);
     }
+    $stmt->close();
     exit;
 }
 
-// Handle RSVP request
+// Handle RSVP request (PATCH)
 if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
     if (!is_logged_in()) {
         http_response_code(401);
@@ -167,45 +134,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
 
     $data = json_decode(file_get_contents('php://input'), true);
 
-    if (!$data || !isset($data['id']) || !isset($data['action'])) {
+    if (!isset($data['id']) || !isset($data['action'])) {
         http_response_code(400);
         echo json_encode(['error' => 'Missing required fields']);
         exit;
     }
 
-    $events = load_events();
-    $found = false;
-    $memberEmail = $_SESSION['member_email'];
+    $eventId = (int)$data['id'];
+    $userId = (int)($_SESSION['user_id'] ?? 0);
+    $action = $data['action'];
 
-    foreach ($events as &$event) {
-        if ($event['id'] == $data['id']) {
-            if ($data['action'] === 'rsvp') {
-                if (!in_array($memberEmail, $event['rsvps'])) {
-                    $event['rsvps'][] = $memberEmail;
-                }
-            } elseif ($data['action'] === 'cancel') {
-                $event['rsvps'] = array_filter($event['rsvps'], function($email) use ($memberEmail) {
-                    return $email !== $memberEmail;
-                });
-                $event['rsvps'] = array_values($event['rsvps']);
-            }
-            $found = true;
-            break;
-        }
-    }
-
-    if (!$found) {
-        http_response_code(404);
-        echo json_encode(['error' => 'Event not found']);
+    if (!$userId) {
+        http_response_code(401);
+        echo json_encode(['error' => 'User not authenticated']);
         exit;
     }
 
-    if (save_events($events)) {
-        header('Content-Type: application/json');
-        echo json_encode(['success' => true]);
+    if ($action === 'rsvp') {
+        // Check if already RSVPed
+        $checkStmt = $conn->prepare("SELECT id FROM event_attendees WHERE event_id = ? AND user_id = ?");
+        $checkStmt->bind_param("ii", $eventId, $userId);
+        $checkStmt->execute();
+        $existing = $checkStmt->get_result()->fetch_assoc();
+        $checkStmt->close();
+
+        if (!$existing) {
+            $insertStmt = $conn->prepare("INSERT INTO event_attendees (event_id, user_id) VALUES (?, ?)");
+            $insertStmt->bind_param("ii", $eventId, $userId);
+            if ($insertStmt->execute()) {
+                echo json_encode(['success' => true, 'message' => 'RSVP successful']);
+            } else {
+                http_response_code(500);
+                echo json_encode(['error' => 'Failed to RSVP']);
+            }
+            $insertStmt->close();
+        } else {
+            echo json_encode(['success' => true, 'message' => 'Already RSVPed']);
+        }
+    } elseif ($action === 'cancel') {
+        $deleteStmt = $conn->prepare("DELETE FROM event_attendees WHERE event_id = ? AND user_id = ?");
+        $deleteStmt->bind_param("ii", $eventId, $userId);
+        if ($deleteStmt->execute()) {
+            echo json_encode(['success' => true, 'message' => 'RSVP cancelled']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['error' => 'Failed to cancel RSVP']);
+        }
+        $deleteStmt->close();
     } else {
-        http_response_code(500);
-        echo json_encode(['error' => 'Failed to update RSVP']);
+        http_response_code(400);
+        echo json_encode(['error' => 'Invalid action']);
     }
     exit;
 }
