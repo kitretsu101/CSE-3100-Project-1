@@ -99,7 +99,7 @@ require_once __DIR__ . '/auth.php';
                         <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop" alt="Team Member">
                     </div>
                     <div class="team-info">
-                        <h3>Alex Chen</h3>
+                        <h3>Plabon Barua</h3>
                         <p class="role">Club President</p>
                     </div>
                 </div>
@@ -110,7 +110,7 @@ require_once __DIR__ . '/auth.php';
                         <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&h=300&fit=crop" alt="Team Member">
                     </div>
                     <div class="team-info">
-                        <h3>Sarah Williams</h3>
+                        <h3>Srabon Barua</h3>
                         <p class="role">Vice President</p>
                     </div>
                 </div>
@@ -118,10 +118,10 @@ require_once __DIR__ . '/auth.php';
                 <!-- Team Member 3 -->
                 <div class="team-card">
                     <div class="team-image">
-                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop" alt="Team Member">
+                        <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&h=300&fit=crop" alt="Team Member">
                     </div>
                     <div class="team-info">
-                        <h3>James Rodriguez</h3>
+                        <h3>Rajon Barua</h3>
                         <p class="role">Events Coordinator</p>
                     </div>
                 </div>
@@ -129,10 +129,10 @@ require_once __DIR__ . '/auth.php';
                 <!-- Team Member 4 -->
                 <div class="team-card">
                     <div class="team-image">
-                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&h=300&fit=crop" alt="Team Member">
+                        <img src="https://images.unsplash.com/photo-1544007385-5a7b5e02a6fb?w=300&h=300&fit=crop" alt="Team Member">
                     </div>
                     <div class="team-info">
-                        <h3>Emma Johnson</h3>
+                        <h3>Suman Barua</h3>
                         <p class="role">Tech Lead</p>
                     </div>
                 </div>
@@ -140,24 +140,14 @@ require_once __DIR__ . '/auth.php';
                 <!-- Team Member 5 -->
                 <div class="team-card">
                     <div class="team-image">
-                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop" alt="Team Member">
+                        <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop" alt="Team Member">
                     </div>
                     <div class="team-info">
-                        <h3>Michael Park</h3>
+                        <h3>Prangon Barua</h3>
                         <p class="role">Marketing Lead</p>
                     </div>
                 </div>
 
-                <!-- Team Member 6 -->
-                <div class="team-card">
-                    <div class="team-image">
-                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&h=300&fit=crop" alt="Team Member">
-                    </div>
-                    <div class="team-info">
-                        <h3>Lisa Thompson</h3>
-                        <p class="role">Community Manager</p>
-                    </div>
-                </div>
             </div>
         </div>
     </section>
