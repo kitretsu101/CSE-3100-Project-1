@@ -24,6 +24,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             // Get RSVP count for this event
             $rsvpQuery = "SELECT COUNT(*) as cnt FROM event_attendees WHERE event_id = ?";
             $rsvpStmt = $conn->prepare($rsvpQuery);
+            if (!$rsvpStmt) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Database prepare failed for RSVP count: ' . $conn->error]);
+                exit;
+            }
             $rsvpStmt->bind_param("i", $row['id']);
             $rsvpStmt->execute();
             $rsvpCount = $rsvpStmt->get_result()->fetch_assoc()['cnt'];
@@ -34,6 +39,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                               JOIN users u ON ea.user_id = u.id 
                               WHERE ea.event_id = ?";
             $attendeesStmt = $conn->prepare($attendeesQuery);
+            if (!$attendeesStmt) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Database prepare failed for attendee list: ' . $conn->error]);
+                exit;
+            }
             $attendeesStmt->bind_param("i", $row['id']);
             $attendeesStmt->execute();
             $rsvps = [];
